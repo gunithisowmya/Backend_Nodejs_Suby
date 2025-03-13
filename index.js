@@ -25,7 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 // ✅ Define /home route first
-app.use('/home', (req, res) => {
+app.use('/', (req, res) => {
     res.send("<h1>Welcome to SUBY</h1>");
 });
 
