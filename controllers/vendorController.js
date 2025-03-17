@@ -31,7 +31,6 @@ const vendorRegister = async (req, res) => {
 
     }
 }
-
 const vendorLogin = async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -40,7 +39,8 @@ const vendorLogin = async (req, res) => {
             return res.status(401).json({ error: "Invalid username or password" })
         }
         const token = jwt.sign({ vendorId: vendor._id }, secretKey, { expiresIn: "1h" })
-        res.status(200).json({ email, success: "Login successful", token })
+        const vendorId = vendor._id;
+        res.status(200).json({ email, success: "Login successful", token, vendorId })
         console.log(email, "this is token", token);
     }
     catch (error) {
@@ -53,7 +53,7 @@ const vendorLogin = async (req, res) => {
 
 const getAllVendors = async (req, res) => {
     try {
-        const vendors = await Vendor.find().populate('firm')
+        const vendors = await Vendor.find().populate('firm');
         res.json({ vendors })
     }
     catch (error) {
@@ -63,13 +63,19 @@ const getAllVendors = async (req, res) => {
 }
 
 const getVendorById = async (req, res) => {
-    const vendorId = req.params.id;
+
     try {
+        const vendorId = req.params.id;
         const vendor = await Vendor.findById(vendorId).populate('firm');
         if (!vendor) {
             return res.status(404).json({ error: "vendor not found" });
         }
-        res.status(200).json({ vendors })
+        if (!vendor.firm || vendor.firm.length === 0) {
+            return res.status(200).json({ vendor, vendorFirmId: null }); // ✅ Return null if no firm
+        }
+        const vendorFirmId = vendor.firm[0]?._id || null;
+        res.status(200).json({ vendor, vendorFirmId })
+        console.log(vendor, vendorFirmId);
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: "Internal server error" });

@@ -9,7 +9,7 @@ const storage = multer.diskStorage({
         cb(null, 'uploads'); // Ensure 'uploads' directory exists
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + Path2D.extname(file.originalname));
+        cb(null, Date.now() + path.extname(file.originalname));
     }
 });
 
@@ -25,6 +25,9 @@ const addFirm = async (req, res) => {
         if (!vendor) {
             return res.status(404).json({ message: "Vendor not found" }); // Return here
         }
+        if (vendor.firm.length > 0) {
+            return res.status(400).json({ message: "vendor can have only one firm" });
+        }
 
         const firm = new Firm({
             firmName,
@@ -37,9 +40,12 @@ const addFirm = async (req, res) => {
         });
 
         const savedFirm = await firm.save();
+        const firmId = savedFirm._id
         vendor.firm.push(savedFirm)
         await vendor.save()
-        return res.status(200).json({ message: 'Firm Added Successfully' });
+
+
+        return res.status(200).json({ message: 'Firm Added Successfully', firmId, vendorFirmName : firmName});
 
     } catch (error) {
         console.error(error);
@@ -54,6 +60,7 @@ const deleteFirmById = async (req, res) => {
         if (!deletedProduct) {
             return res.status(404).json({ error: "No product found" });
         }
+        return res.status(200).json({ message: "Firm deleted successfully" });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Internal server error" });
